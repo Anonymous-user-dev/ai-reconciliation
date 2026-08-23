@@ -31,3 +31,28 @@ def find_candidate_matches(invoices: list[Invoice], transactions: list[BankTrans
                 candidates.append(candidate)
                 
     return candidates
+
+def test_match():
+    invoice = Invoice(
+        id=uuid4(),
+        supplier_name="ABC",
+        invoice_number="2e123",
+        invoice_date=date(2026, 7, 1),
+        amount=Decimal("1250.00"),
+        currency="TJS",
+    )
+
+    transaction = BankTransaction(
+        id=uuid4(),
+        transaction_date=date(2026, 7, 4),
+        description="Some",
+        amount=Decimal("-1250.00"),
+        currency="TJS",
+    )
+
+    result = find_candidate_matches(
+        invoices=[invoice],
+        transactions=[transaction],
+    )
+
+    assert len(result) == 1
