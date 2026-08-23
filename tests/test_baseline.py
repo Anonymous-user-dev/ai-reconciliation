@@ -34,3 +34,28 @@ def test_match():
     assert candidate.amount_matches is True
     assert candidate.currency_matches is True
     assert candidate.date_difference_days == 3
+
+def test_amount_mismatch_returns_no_candidate():
+    invoice = Invoice(
+        id=uuid4(),
+        supplier_name="ABC",
+        invoice_number="2e123",
+        invoice_date=date(2026, 7, 1),
+        amount=Decimal("1250.00"),
+        currency="TJS",
+    )
+
+    transaction = BankTransaction(
+        id=uuid4(),
+        transaction_date=date(2026, 7, 4),
+        description="Some",
+        amount=Decimal("-1200.00"),
+        currency="TJS",
+    )
+
+    result = find_candidate_matches(
+        invoices=[invoice],
+        transactions=[transaction]
+    )
+
+    assert len(result) == 0
