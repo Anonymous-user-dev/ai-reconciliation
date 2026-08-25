@@ -3,31 +3,40 @@ from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 from app.domain.models import BankTransaction, Invoice
+import pytest
 
-def test_match():
-    invoice = Invoice(
+@pytest.fixture
+def invoice():
+    return Invoice(
         id=uuid4(),
         supplier_name="ABC",
         invoice_number="2e123",
-        invoice_date=date(2026, 7, 1),
+        invoice_date=date(2026,7,1),
         amount=Decimal("1250.00"),
-        currency="TJS",
+        currency="TJS"
     )
 
-    transaction = BankTransaction(
+@pytest.fixture
+def transaction():
+        return BankTransaction(
         id=uuid4(),
         transaction_date=date(2026, 7, 4),
         description="Some",
         amount=Decimal("-1250.00"),
-        currency="TJS",
-    )
+        currency="TJS"
+        )
+
+
+def test_match(invoice, transaction):
+
 
     result = find_candidate_matches(
         invoices=[invoice],
         transactions=[transaction],
     )
 
-    candidate = result [0]
+    assert len(result) == 1
+    candidate = result[0]
 
     assert candidate.invoice_id == invoice.id
     assert candidate.transaction_id == transaction.id
@@ -141,4 +150,53 @@ def test_multiple_matching_invoices_return_multiple_candidates():
 
     assert len(result) == 2
 
+def test_transaction_outside_date_window_returns_no_candidate():
+    invoice = Invoice(
+        id=uuid4(),
+        supplier_name="ABC",
+        invoice_number="2e123",
+        invoice_date=date(2026, 7, 1),
+        amount=Decimal("1250.00"),
+        currency="USD",
+    )
 
+    transaction = BankTransaction(
+        id=uuid4(),
+        transaction_date=date(2026, 7, 20),
+        description="Some",
+        amount=Decimal("-1250.00"),
+        currency="USD",
+    )
+
+    result = find_candidate_matches(
+        invoices=[invoice],
+        transactions=[transaction]
+    )
+
+    assert len(result) == 0
+
+def test_custom_date_window_allows_match():
+    invoice = Invoice(
+        id=uuid4(),
+        supplier_name="ABC",
+        invoice_number="2e123",
+        invoice_date=date(2026, 7, 1),
+        amount=Decimal("1250.00"),
+        currency="USD",
+    )
+
+    transaction = BankTransaction(
+        id=uuid4(),
+        transaction_date=date(2026, 7, 20),
+        description="Some",
+        amount=Decimal("-1250.00"),
+        currency="USD",
+    )
+
+    result = find_candidate_matches(
+        invoices=[invoice],
+        transactions=[transaction],
+        maximum_date_difference_days=19
+    )
+
+    assert len(result) == 1
