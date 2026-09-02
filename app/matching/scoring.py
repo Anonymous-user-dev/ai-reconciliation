@@ -1,4 +1,5 @@
 from app.domain.models import Invoice, BankTransaction
+from app.matching.baseline import supplier_similarity
 
 def calculate_match_score(invoice: Invoice, transaction: BankTransaction, *, maximum_date_difference_days: int = 14) -> float:
     date_difference = (
@@ -16,13 +17,16 @@ def calculate_match_score(invoice: Invoice, transaction: BankTransaction, *, max
 
     currency_score = 1.0
 
-    data_score = max(
+    date_score = max(
         0.0,
         1 - (date_difference / maximum_date_difference_days)
     )
+    supplier_score = supplier_similarity(invoice.supplier_name, transaction.description)
+
+
 
     score = (
-        amount_score * 0.50 + currency_score * 0.20 + data_score * 0.30
+        amount_score * 0.40 + currency_score * 0.15 + date_score * 0.25 + supplier_score * 0.20
     )
 
     return score

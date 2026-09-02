@@ -200,3 +200,4 @@ def test_custom_date_window_allows_match():
     )
 
     assert len(result) == 1
+

@@ -1,5 +1,15 @@
 from app.domain.models import Invoice, BankTransaction, MatchCandidate
+from difflib import SequenceMatcher
 
+def supplier_similarity(supplier_name: str, transaction_description: str) -> float:
+    supplier_lower = supplier_name.lower()
+    description_lower = transaction_description.lower()
+
+    matcher = SequenceMatcher(None, supplier_lower, description_lower)
+
+    similarity = matcher.ratio()
+
+    return similarity
 
 def find_candidate_matches(invoices: list[Invoice], transactions: list[BankTransaction], *, maximum_date_difference_days: int = 14) -> list[MatchCandidate]:
     candidates = []
